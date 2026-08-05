@@ -7,6 +7,14 @@ local makeImage = import 'pipelines/GenerateImage.lua'
 local pipeline = import 'pipelines/Display.lua'
 local ImageHandler = import 'ImageHandler.lua'
 
+local function zoom(u,v,level,x,y)
+    return (u-0.5) / level + 0.5 + x,(v-0.5) / level + 0.5 + y
+end
+
+local function invertZoom(u,v,level,x,y)
+    return (u-x-0.5)*level+0.5,(v-y-0.5)*level+0.5
+end
+
 return function(gameHandler,screen,image)
     local char,square = screen.combinators[1],screen.combinators[2]
     local mon = peripheral.find('monitor')
@@ -73,12 +81,24 @@ return function(gameHandler,screen,image)
     local pLeft = {x=p.x-arrowScale,y=p.y}
     local pTop = {x=p.x,y=p.y-arrowScale}
     local pBottom = {x=p.x,y=p.y+arrowScale}
-
-    local palette = image:findPalette('kmeans')
-
+    local palette = image:duplicate():resize(sx,sy):findPalette('kmeans')
+    sleep()
     local temp = ImageHandler:new(arrowScale+1,arrowScale+1)
 
+
+    gameHandler.state.screen = screen
+    gameHandler.state.x = 0
+    gameHandler.state.y = 0
+    gameHandler.state.level = 1
+
     pipeline
+        :pipe(function(_,input)
+            input.image:process(function(_,u,v)
+                u,v = zoom(u,v,gameHandler.state.level,gameHandler.state.x,gameHandler.state.y)
+                return image:getPx(u,v)
+            end)
+            return input
+        end)
         :zoom()
         :image('right')
         :image('left')
@@ -87,18 +107,12 @@ return function(gameHandler,screen,image)
         :image('plus')
         :image('minus')
 
-    gameHandler.state.screen = screen
-    gameHandler.state.x = 0
-    gameHandler.state.y = 0
-    gameHandler.state.level = 1
-
     gameHandler
         :addTask(function(state)
             local sx,sy = state.screen:getSize()
             pipeline:start{
                 palette=palette,
                 screen=screen,
-                image=image,
                 zoom={
                     level=state.level,
                     x=state.x,--0.5*math.sin(os.clock()),
@@ -182,7 +196,7 @@ return function(gameHandler,screen,image)
             from={pRight.x,pRight.y,'px'},
             to={pRight.x+arrowScale,pRight.y+arrowScale,'px'},
             onClick=function(state)
-                state.x=state.x+0.2/state.level
+                state.x=state.x+0.1/state.level
                 return true
             end
         }
@@ -190,7 +204,7 @@ return function(gameHandler,screen,image)
             from={pLeft.x+1,pLeft.y,'px'},
             to={pLeft.x+1+arrowScale,pLeft.y+arrowScale,'px'},
             onClick=function(state)
-                state.x=state.x-0.2/state.level
+                state.x=state.x-0.1/state.level
                 return true
             end
         }
@@ -198,7 +212,7 @@ return function(gameHandler,screen,image)
             from={pTop.x,pTop.y,'px'},
             to={pTop.x+arrowScale,pTop.y+arrowScale,'px'},
             onClick=function(state)
-                state.y=state.y-0.2/state.level
+                state.y=state.y-0.1/state.level
                 return true
             end
         }
@@ -206,7 +220,7 @@ return function(gameHandler,screen,image)
             from={pBottom.x,pBottom.y-1,'px'},
             to={pBottom.x+arrowScale,pBottom.y+arrowScale-1,'px'},
             onClick=function(state)
-                state.y=state.y+0.2/state.level
+                state.y=state.y+0.1/state.level
                 return true
             end
         }
@@ -214,7 +228,7 @@ return function(gameHandler,screen,image)
             from={pLeft.x+1-arrowScale,pTop.y+2,'px'},
             to={pLeft.x+1,pTop.y+arrowScale+2,'px'},
             onClick=function(state)
-                state.level=state.level*1.4
+                state.level=state.level*1.1
                 return true
             end
         }
@@ -222,7 +236,7 @@ return function(gameHandler,screen,image)
             from={pLeft.x+1-arrowScale,pTop.y+2*arrowScale-2,'px'},
             to={pLeft.x+1,pTop.y+3*arrowScale-2,'px'},
             onClick=function(state)
-                state.level=state.level*0.6
+                state.level=state.level*0.9
                 return true
             end
         }
