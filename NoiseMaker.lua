@@ -162,7 +162,7 @@ function NoiseMaker:newRandChoiceNoise(sx,sy,params)
 end
 
 -- Worley noise
-function NoiseMaker:newRandWorleyNoise(sx,sy,params)
+function NoiseMaker:newWorleyNoise(sx,sy,params)
     params = params and params or {}
     
     -- func to build grid vector

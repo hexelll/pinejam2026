@@ -39,7 +39,7 @@ return function(gameHandler,screen,image)
             color=Color()
         }
         :start{sx=21,sy=21,screen=screen}
-        .image:resizeMean(arrowScale+1,arrowScale+1)
+        .image:resize(arrowScale+1,arrowScale+1)
     sleep()
     local plus = makeImage:duplicate()
         :process{function(_,u,v)
@@ -58,7 +58,7 @@ return function(gameHandler,screen,image)
             color=Color()
         },'quad2')
         :start{sx=21,sy=21,screen=screen}
-        .image:resizeMean(arrowScale+1,arrowScale+1)
+        .image:resize(arrowScale+1,arrowScale+1)
     sleep()
     local minus = makeImage:duplicate()
         :process{function(_,u,v)
@@ -72,7 +72,7 @@ return function(gameHandler,screen,image)
             color=Color()
         },'quad2')
         :start{sx=21,sy=21,screen=screen}
-        .image:resizeMean(arrowScale+1,arrowScale+1)
+        .image:resize(arrowScale+1,arrowScale+1)
 
     sleep()
 
@@ -81,7 +81,17 @@ return function(gameHandler,screen,image)
     local pLeft = {x=p.x-arrowScale,y=p.y}
     local pTop = {x=p.x,y=p.y-arrowScale}
     local pBottom = {x=p.x,y=p.y+arrowScale}
-    local palette = image:duplicate():resize(sx,sy):findPalette('kmeans')
+    
+    
+    --local palette = image:duplicate():resize(sx,sy):findPalette('kmeans',nil,16)
+    --palette[16] = Color("#FF0000")
+    
+    local palette = {Color("#acacbc"),
+        Color("#4f5457"),Color("#252525"),Color("#505050"),Color("#717171"),Color("#e1e1f4"),
+        Color("#094862"),Color("#002c42"),Color("#001729"),
+        Color("#8a8e81"),Color("#5f634c"),Color("#444834")
+    }
+    
     sleep()
     local temp = ImageHandler:new(arrowScale+1,arrowScale+1)
 
@@ -95,11 +105,10 @@ return function(gameHandler,screen,image)
         :pipe(function(_,input)
             input.image:process(function(_,u,v)
                 u,v = zoom(u,v,gameHandler.state.level,gameHandler.state.x,gameHandler.state.y)
-                return image:getPx(u,v)
+                return (image:getPx(u,v) or Color())
             end)
             return input
         end)
-        :zoom()
         :image('right')
         :image('left')
         :image('top')
