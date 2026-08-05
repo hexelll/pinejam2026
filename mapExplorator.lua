@@ -11,7 +11,7 @@ return function(gameHandler,screen,image)
     local char,square = screen.combinators[1],screen.combinators[2]
     local mon = peripheral.find('monitor')
     mon.setTextScale(0.5)
-
+    sleep()
     local sx,sy = screen:getSize()
 
     local arrowScale = 7
@@ -30,9 +30,9 @@ return function(gameHandler,screen,image)
             },
             color=Color()
         }
-        :start{screen=screen}
+        :start{sx=21,sy=21,screen=screen}
         .image:resizeMean(arrowScale+1,arrowScale+1)
-
+    sleep()
     local plus = makeImage:duplicate()
         :process{function(_,u,v)
             u,v = math.abs(u-0.5),math.abs(v-0.5)
@@ -49,9 +49,9 @@ return function(gameHandler,screen,image)
             to={0.7,0.5+0.1},
             color=Color()
         },'quad2')
-        :start{screen=screen}
+        :start{sx=21,sy=21,screen=screen}
         .image:resizeMean(arrowScale+1,arrowScale+1)
-
+    sleep()
     local minus = makeImage:duplicate()
         :process{function(_,u,v)
             u,v = math.abs(u-0.5),math.abs(v-0.5)
@@ -63,12 +63,12 @@ return function(gameHandler,screen,image)
             to={0.7,0.5+0.1},
             color=Color()
         },'quad2')
-        :start{screen=screen}
+        :start{sx=21,sy=21,screen=screen}
         .image:resizeMean(arrowScale+1,arrowScale+1)
 
     sleep()
 
-    local p = {x=sx-arrowScale*2,y=sy-arrowScale*2}
+    local p = {x=arrowScale*2,y=arrowScale*1.5}
     local pRight = {x=p.x+arrowScale,y=p.y}
     local pLeft = {x=p.x-arrowScale,y=p.y}
     local pTop = {x=p.x,y=p.y-arrowScale}
@@ -174,7 +174,7 @@ return function(gameHandler,screen,image)
             from={pRight.x,pRight.y,'px'},
             to={pRight.x+arrowScale,pRight.y+arrowScale,'px'},
             onClick=function(state)
-                state.x=state.x+0.1
+                state.x=state.x+0.2
                 return true
             end
         }
@@ -182,7 +182,7 @@ return function(gameHandler,screen,image)
             from={pLeft.x+1,pLeft.y,'px'},
             to={pLeft.x+1+arrowScale,pLeft.y+arrowScale,'px'},
             onClick=function(state)
-                state.x=state.x-0.1
+                state.x=state.x-0.2
                 return true
             end
         }
@@ -190,7 +190,7 @@ return function(gameHandler,screen,image)
             from={pTop.x,pTop.y,'px'},
             to={pTop.x+arrowScale,pTop.y+arrowScale,'px'},
             onClick=function(state)
-                state.y=state.y-0.1
+                state.y=state.y-0.2
                 return true
             end
         }
@@ -198,7 +198,7 @@ return function(gameHandler,screen,image)
             from={pBottom.x,pBottom.y-1,'px'},
             to={pBottom.x+arrowScale,pBottom.y+arrowScale-1,'px'},
             onClick=function(state)
-                state.y=state.y+0.1
+                state.y=state.y+0.2
                 return true
             end
         }
@@ -206,7 +206,7 @@ return function(gameHandler,screen,image)
             from={pLeft.x+1-arrowScale,pTop.y+2,'px'},
             to={pLeft.x+1,pTop.y+arrowScale+2,'px'},
             onClick=function(state)
-                state.level=state.level*1.1
+                state.level=state.level*1.4
                 return true
             end
         }
@@ -214,7 +214,7 @@ return function(gameHandler,screen,image)
             from={pLeft.x+1-arrowScale,pTop.y+2*arrowScale-2,'px'},
             to={pLeft.x+1,pTop.y+3*arrowScale-2,'px'},
             onClick=function(state)
-                state.level=state.level*0.9
+                state.level=state.level*0.6
                 return true
             end
         }
