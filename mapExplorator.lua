@@ -5,7 +5,7 @@ import
 local Color = import 'Color.lua'
 local makeImage = import 'pipelines/GenerateImage.lua'
 local pipeline = import 'pipelines/Display.lua'
-
+local ImageHandler = import 'ImageHandler.lua'
 
 return function(gameHandler,screen,image)
     local char,square = screen.combinators[1],screen.combinators[2]
@@ -76,6 +76,8 @@ return function(gameHandler,screen,image)
 
     local palette = image:findPalette('kmeans')
 
+    local temp = ImageHandler:new(arrowScale+1,arrowScale+1)
+
     pipeline
         :zoom()
         :image('right')
@@ -103,6 +105,7 @@ return function(gameHandler,screen,image)
                     y=state.y--0.5*math.cos(os.clock())
                 },
                 right={
+                    image=temp,
                     from={pRight.x,pRight.y,'px'},
                     to={pRight.x+arrowScale,pRight.y+arrowScale,'px'},
                     color=function(self,u,v,U,V)
@@ -114,6 +117,7 @@ return function(gameHandler,screen,image)
                     end
                 },
                 left={
+                    image=temp,
                     from={pLeft.x+1,pLeft.y,'px'},
                     to={pLeft.x+1+arrowScale,pLeft.y+arrowScale,'px'},
                     color=function(self,u,v,U,V)
@@ -125,6 +129,7 @@ return function(gameHandler,screen,image)
                     end
                 },
                 top={
+                    image=temp,
                     from={pTop.x,pTop.y,'px'},
                     to={pTop.x+arrowScale,pTop.y+arrowScale,'px'},
                     color=function(self,u,v,U,V)
@@ -136,6 +141,7 @@ return function(gameHandler,screen,image)
                     end
                 },
                 bottom={
+                    image=temp,
                     from={pBottom.x,pBottom.y-1,'px'},
                     to={pBottom.x+arrowScale,pBottom.y+arrowScale-1,'px'},
                     color=function(self,u,v,U,V)
@@ -147,6 +153,7 @@ return function(gameHandler,screen,image)
                     end
                 },
                 plus={
+                    image=temp,
                     from={pLeft.x+1-arrowScale,pTop.y+2,'px'},
                     to={pLeft.x+1,pTop.y+arrowScale+2,'px'},
                     color=function(self,u,v,U,V)
@@ -158,6 +165,7 @@ return function(gameHandler,screen,image)
                     end
                 },
                 minus={
+                    image=temp,
                     from={pLeft.x+1-arrowScale,pTop.y+2*arrowScale-2,'px'},
                     to={pLeft.x+1,pTop.y+3*arrowScale-2,'px'},
                     color=function(self,u,v,U,V)
