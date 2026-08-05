@@ -182,7 +182,7 @@ return function(gameHandler,screen,image)
             from={pRight.x,pRight.y,'px'},
             to={pRight.x+arrowScale,pRight.y+arrowScale,'px'},
             onClick=function(state)
-                state.x=state.x+0.2
+                state.x=state.x+0.2/state.level
                 return true
             end
         }
@@ -190,7 +190,7 @@ return function(gameHandler,screen,image)
             from={pLeft.x+1,pLeft.y,'px'},
             to={pLeft.x+1+arrowScale,pLeft.y+arrowScale,'px'},
             onClick=function(state)
-                state.x=state.x-0.2
+                state.x=state.x-0.2/state.level
                 return true
             end
         }
@@ -198,7 +198,7 @@ return function(gameHandler,screen,image)
             from={pTop.x,pTop.y,'px'},
             to={pTop.x+arrowScale,pTop.y+arrowScale,'px'},
             onClick=function(state)
-                state.y=state.y-0.2
+                state.y=state.y-0.2/state.level
                 return true
             end
         }
@@ -206,7 +206,7 @@ return function(gameHandler,screen,image)
             from={pBottom.x,pBottom.y-1,'px'},
             to={pBottom.x+arrowScale,pBottom.y+arrowScale-1,'px'},
             onClick=function(state)
-                state.y=state.y+0.2
+                state.y=state.y+0.2/state.level
                 return true
             end
         }
