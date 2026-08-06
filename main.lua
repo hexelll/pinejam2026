@@ -17,7 +17,7 @@ local char,square = import('combinators/MathCharCombinator.lua'):new(),import('c
 
 
 --[[
-    INIT GAME
+    INIT MAP
 ]]
 write("Building the map... ")
 local map = MapGenerator.makeMap()
@@ -43,38 +43,77 @@ local pipeline = mapExplorator(gameHandler,screen, map.prettyMap)
 print("Display ready")
 
 
+
 --[[
     GAME LOGIC 
 ]]
 
-local function kaboom()
+-- explode one shot
+local function kaboom(shot)
+    -- destroy cities/lines
+
+    -- play cool animation ?
+
     print("KABOOM")
 end
+-- shots explosions logic
+gameHandler:addTask(function (state)
 
-local function launchAttack(warning)
-    
+    -- explode when shot expires
+    for k,shot in pairs(state.shots) do
+        if ( shot.bombingTime <= os.clock() ) then
+            kaboom(state,shot)
+            state.shots[k] = nil
+        end
+    end
+
+end)
+
+
+
+local function randomFloat(min,max)
+    return math.random()*(max-min)+min
 end
 
--- bombs logic
+-- create shots in bombs warning
+local function launchAttack(state,w)
+    
+    local nbShots = math.floor(state.dangerLevel+0.5)
+    for i=1,nbShots do 
+
+        local x,y = randomFloat(w.x-w.r/2,w.x+w.r/2),randomFloat(w.y-w.r/2,w.y+w.r/2)
+
+        state.shots[state.shotsId] = {
+            x= x,
+            y= y,
+            r= math.max( w.r, 0.05+math.random()*state.dangerLevel/15 ),
+            bombingTime = os.clock()+3,
+            startTime = os.clock()
+        }
+        state.shotsId = state.shotsId + 1
+
+    end
+
+end
+-- bombs warnings logic
 gameHandler:addTask(function (state)
 
     -- launch bombs when bombwarning expires
     for k,warning in pairs(state.bombsWarnings) do
         if ( warning.bombingTime <= os.clock() ) then
-            launchAttack(warning)
+            launchAttack(state,warning)
             state.bombsWarnings[k] = nil
         end
     end
     
     -- add warnings 
-    local delayBombs = (1/state.dangerLevel)*5
+    local delayBombs = math.max( 0, (1/state.dangerLevel)*5)
     if ( os.clock() - state.bombWarningTime > delayBombs )then
    
         state.bombsWarnings[state.warningId] = {
-            warningId = state.warningId,
             x=math.random(),
             y=math.random(),
-            r=0.05+math.random()*state.dangerLevel/10,
+            r=  0.05+math.random()*state.dangerLevel/10 ,
             bombingTime = os.clock()+10,
             startTime = os.clock()
         }
@@ -86,6 +125,8 @@ gameHandler:addTask(function (state)
     end
 
 end)
+
+
 
 -- days logic
 gameHandler:addTask(function (state)
@@ -103,6 +144,7 @@ gameHandler:addTask(function (state)
     end
 end)
 
+
 -- end logic
 gameHandler:addTask(function (state)
     if state.cities and #state.cities <= 0 then
@@ -112,19 +154,25 @@ gameHandler:addTask(function (state)
 end)
 
 
+
 --[[
     START 
 ]]
 print("Game started !")
 gameHandler:run{
-    warningId = 1,
     isAlive = true,
     dangerLevel = 1,
+
     ressources = 4,
     maxRessources=100,
+
     dayNb = 1,
     dayChangeTime = os.clock(),
+
     bombWarningTime = os.clock(),
     bombsWarnings = {},
-    shots = {}
+    warningId = 1,
+
+    shots = {},
+    shotsId = 1,
 }
