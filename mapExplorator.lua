@@ -443,7 +443,7 @@ return function(gameHandler,screen,image)
                     state.cityId = state.cityId+1
                 end
             end
-        else
+        elseif i then
             local p = state.cities[i]
             if state.selected == p[3] then
                 state.selected = nil
