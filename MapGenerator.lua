@@ -20,7 +20,13 @@ local function clamp(val)
 end
 
 local function mapToGradient(val,color1,color2)
-    return Color(color1):mix(Color(color2),1-val)
+    if (type(color1) == "string")then
+        color1 = Color(color1)
+    end
+    if (type(color2) == "string")then
+        color2 = Color(color2)
+    end
+    return color1:mix(color2,1-val)
 end
 
 
@@ -41,12 +47,6 @@ return {
     --[[
         SETUP
     ]]
-    -- center weighted noise
-    local noisyP1 = NoiseMaker:newRandChoiceNoise(40,40, {
-        func = function(u,v)
-            return math.random()
-        end
-    })
     -- continent noises
     local p1 = NoiseMaker:newPerlin(10,10,{
         func = function(u,v)
@@ -61,13 +61,23 @@ return {
     })
     local p2 = NoiseMaker:newPerlin(18,18)
     local p3 = NoiseMaker:newPerlin(30,30)
+    local p4 = NoiseMaker:newPerlin(70,70)
+
+    local pdetail1 = NoiseMaker:newPerlin(10,10)
+    local pdetail2 = NoiseMaker:newPerlin(40,40)
+
+    -- center weighted noise
+    local noisyP3 = NoiseMaker:newRandChoiceNoise(80,80, {
+        func = function(u,v)
+            return p3:getValUV(u,v)
+        end
+    })
+
+    local worley1 = NoiseMaker:newWorleyNoise(10,10)
+    local worley2 = NoiseMaker:newWorleyNoise(40,40)
 
 
-    local waves = NoiseMaker:newPerlin(20,90)
-    
-    local worley = NoiseMaker:newWorleyNoise(5,5)
-
-
+    local du,dv = math.random()*0.2-0.1,math.random()*0.2-0.1
 
     --[[
         PROCESS
@@ -82,16 +92,18 @@ return {
             local val1 = to01(p1:getValUV(u,v))
             local val2 = to01(p2:getValUV(u,v))
             local val3 = to01(p3:getValUV(u,v))
+            local val4 = to01(p4:getValUV(u,v))
 
-            local centerDist = (1-math.pow((math.sqrt((u-0.5)^2+(v-0.5)^2)), 1 )+0.25)
+            local centerDist = (1- math.sqrt( ((u+du-0.5)^2) + ((v+dv-0.5)^2) ) +0.25)
 
-            local height = math.pow(centerDist,6) * clamp( (val1*0.6 + val2*0.3 + val3*0.1)*2.5) 
+            local height = math.pow(centerDist,6) * math.max( centerDist*0.05, clamp( (val1*0.6 + val2*0.25 + val3*0.08 + val4*0.03)*2.5) )
 
-            local effect = clamp(1-val1)
+            local detail1 = to01(pdetail1:getValUV(u,v))
+            local detail2 = to01(pdetail2:getValUV(u,v))
 
             -- treesholds
             local oceanT = 0.1
-            local coastT = (oceanT+0.01)
+            local coastT = (oceanT+ 0.03*math.max(0,(val2*3)) )
             local beachT = (oceanT+0.1)*centerDist*1.1
             local landT = 0.9
             
@@ -104,10 +116,10 @@ return {
             elseif ((height < coastT) and (centerDist < 0.9)) then
                 biome = "coast"
                 placable = false
+            elseif height > beachT and height < landT then
+                biome = "land"
             elseif height < beachT then
                 biome = "beach"
-            elseif height < landT then
-                biome = "land"
             else
                 biome = "rock"
             end
@@ -116,23 +128,42 @@ return {
 
             -- color biomes
             if biome == "ocean" then
-                local h = 1-height/oceanT
+                local h = 0.7*(1-height/oceanT) + 0.3*(1-(worley2:getValUV(u,v)^4))
                 local col = mapToGradient(h,"#001121","#095674")
-
-                --col = col * (to01(waves:getValUV(u,v))*0.9 +0.4)
+                
+                --local noise = 
+                --if noise > 0.6 then
+                --    return col:mix(Color("#095674"), (noise-0.6)*1.8 )
+                --end
+                
                 return col
             elseif biome == "coast" then
-                return Color("#508095")
+                local col 
+                if math.random() < 0.3 then
+                    col = Color("#508095")
+                    col = col * ( ( math.random() )*0.07 +1 )
+                    
+                else
+                    local h = 0.7*(1-height/oceanT) + 0.3*(1-(worley2:getValUV(u,v)^4))
+                    col = mapToGradient(h,"#001121","#095674")
+                end
+                return col
             elseif biome == "beach" then
                 --local h = (height - oceanT )*1
-                local col = Color("#4f5457")
+                local col = Color("#2C2C2C")
 
-                col = col * (math.random()*0.1+0.45 )
+                col = col * ( (noisyP3:getValUV(u,v)*0.8 + math.random()*0.2  )*0.4 +0.85 )
 
                 return col
             elseif biome == "land" then
-                local color = mapToGradient(height,"#acb192","#232616")
-                return color
+                local h = 0.7*(height/landT) + 0.3*noisyP3:getValUV(u,v)
+                local col = mapToGradient(1-h,"#232616","#acb192")
+                
+                col = mapToGradient( 1-math.max(0,val2-0.4) , col, "#FFFFFF" )
+                col = mapToGradient( 1-math.max(0,detail1-0.2) , col, "#4b3d27" )
+
+                --col = col * ( (noisyP3:getValUV(u,v)*0.8 + math.random()*0.2  )*0.1 +0.95 )
+                return col
             else
                 return Color(height*0.5,height*0.5,height*0.5)
             end

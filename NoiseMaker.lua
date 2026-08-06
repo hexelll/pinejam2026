@@ -215,7 +215,7 @@ function NoiseMaker:newWorleyNoise(sx,sy,params)
     for x=-1,sx+4 do
         o.randomGrid[x]={}
         for y=-1,sy+4 do
-            o.randomGrid[x][y]=func(x/(sx+2),y/(sy+2))
+            o.randomGrid[x][y]=func((x+1)/(sx+4),(y+1)/(sy+4))
         end
     end
 
