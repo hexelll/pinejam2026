@@ -19,7 +19,7 @@ local char,square = import('combinators/MathCharCombinator.lua'):new(),import('c
 --[[
     INIT GAME
 ]]
-write("Builing the map... ")
+write("Building the map... ")
 local map = MapGenerator.makeMap()
 print("Map ready")
 
@@ -46,27 +46,40 @@ print("Display ready")
 --[[
     GAME LOGIC 
 ]]
+local function detonateBomb(warning)
+    print("KABOOM")
+end
+
 -- bombs logic
 gameHandler:addTask(function (state)
-    --[[
-    local delayBombs = (1/state.dangerLevel)*5
 
+    -- launch bombs when bombwarning expires
+    for k,warning in pairs(state.bombsWarnings) do
+        if ( warning.bombingTime <= os.clock() ) then
+            detonateBomb(warning)
+            state.bombsWarnings[k] = nil
+        end
+    end
+    
+    -- add warnings 
+    local delayBombs = (1/state.dangerLevel)*5
     if ( os.clock() - state.bombWarningTime > delayBombs )then
    
-        -- add bombsWarning
-        bombsWarnings[#bombsWarnings+1] = {
-            x,
-            y,
-            sx,
-            sy,
+        state.bombsWarnings[state.warningId] = {
+            warningId = state.warningId,
+            x=1,
+            y=1,
+            sx=10,
+            sy=10,
             bombingTime = os.clock()+10
         }
+        state.warningId = state.warningId + 1
 
         print("BOMBS COMMING")
 
         state.bombWarningTime = os.clock()
     end
-    ]]
+
 end)
 
 -- days logic
@@ -99,6 +112,7 @@ end)
 ]]
 print("Game started !")
 gameHandler:run{
+    warningId = 1,
     isAlive = true,
     dangerLevel = 1,
     ressources = 4,
