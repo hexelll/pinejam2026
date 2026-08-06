@@ -78,7 +78,7 @@ return function(gameHandler,screen,image)
 
     sleep()
 
-    local p = {x=arrowScale*2,y=arrowScale*1.5}
+    local p = {x=sx-arrowScale*2,y=sy-arrowScale*3}
     local pRight = {x=p.x+arrowScale,y=p.y}
     local pLeft = {x=p.x-arrowScale,y=p.y}
     local pTop = {x=p.x,y=p.y-arrowScale}
@@ -92,7 +92,7 @@ return function(gameHandler,screen,image)
     local palette = {Color("#acacbc"), Color("#4b3d27"),
         Color("#4f5457"),Color("#252525"),Color("#3C3C3C"),Color("#505050"),Color("#717171"),Color("#e1e1f4"),
         Color("#094862"),Color("#002c42"),Color("#001729"),
-        Color("#8a8e81"),Color("#5f634c"),Color("#444834"),Color('#e74343')
+        Color("#8a8e81"),Color("#5f634c"),Color("#444834"),Color('#e74343'),Color('#ffb82b')
     }
     
     sleep()
@@ -152,8 +152,6 @@ return function(gameHandler,screen,image)
                             local d = du*du+dv*dv
                             if d<=r*r and math.abs(math.sqrt(d)-r) < 1.5*dy then
                                 screen.mask:setPx(u,v,square)
-                                screen.mask:setPx(u+dx,v,square)
-                                screen.mask:setPx(u-dx,v,square)
                                 screen.mask:setPx(u,v+dy,square)
                                 screen.mask:setPx(u,v-dy,square)
                                 return Color(1)
@@ -175,8 +173,6 @@ return function(gameHandler,screen,image)
                         color=function(s,U,V,u,v)
                             if math.abs(U) < 1.8*dx  or math.abs(V) < 1.8*dy or math.abs(V-1-dy) < 1.8*dy or math.abs(U-1-dx) < 1.8*dx  then
                                 screen.mask:setPx(u,v,square)
-                                screen.mask:setPx(u+dx,v,square)
-                                screen.mask:setPx(u-dx,v,square)
                                 screen.mask:setPx(u,v+dy,square)
                                 screen.mask:setPx(u,v-dy,square)
                                 local n = ((math.floor(0.4999+u*sx)+math.floor(0.4999+v*sy))%3)
@@ -223,7 +219,7 @@ return function(gameHandler,screen,image)
                         screen.mask:setPx(U,V,square)
                         screen.mask:setPx(U,V+dy,square)
                         screen.mask:setPx(U,V-dy,square)
-                        return (p[3] == state.selected and Color(1,0.6,0.6) or Color(0.6,0.6,0.6)) * (1-math.sqrt(u*u+v*v))
+                        return (p[3] == state.selected and Color(1,1,1) or Color(0.8,0.8)) * (1-math.sqrt(u*u+v*v))
                     end
                 }
             end
