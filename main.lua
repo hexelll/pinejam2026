@@ -46,8 +46,13 @@ print("Display ready")
 --[[
     GAME LOGIC 
 ]]
-local function detonateBomb(warning)
+
+local function kaboom()
     print("KABOOM")
+end
+
+local function launchAttack(warning)
+    
 end
 
 -- bombs logic
@@ -56,7 +61,7 @@ gameHandler:addTask(function (state)
     -- launch bombs when bombwarning expires
     for k,warning in pairs(state.bombsWarnings) do
         if ( warning.bombingTime <= os.clock() ) then
-            detonateBomb(warning)
+            launchAttack(warning)
             state.bombsWarnings[k] = nil
         end
     end
@@ -67,11 +72,11 @@ gameHandler:addTask(function (state)
    
         state.bombsWarnings[state.warningId] = {
             warningId = state.warningId,
-            x=1,
-            y=1,
-            sx=10,
-            sy=10,
-            bombingTime = os.clock()+10
+            x=math.random(),
+            y=math.random(),
+            r=0.05+math.random()*state.dangerLevel/10,
+            bombingTime = os.clock()+10,
+            startTime = os.clock()
         }
         state.warningId = state.warningId + 1
 
@@ -116,8 +121,10 @@ gameHandler:run{
     isAlive = true,
     dangerLevel = 1,
     ressources = 4,
+    maxRessources=100,
     dayNb = 1,
     dayChangeTime = os.clock(),
     bombWarningTime = os.clock(),
-    bombsWarnings = {}
+    bombsWarnings = {},
+    shots = {}
 }
