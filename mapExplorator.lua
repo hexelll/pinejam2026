@@ -108,12 +108,23 @@ return function(gameHandler,screen,image)
     gameHandler.state.y = 0
     gameHandler.state.level = 1
     gameHandler.state.cities = {
-        {0.4,0.4}
+        {0.4,0.4,-1}
     }
+    gameHandler.state.cityId = 0
     gameHandler.state.lines = {}
 
 
     local iconSize = 3
+
+
+    local function findPointById(state,id)
+        for i,p in pairs(state.cities) do
+            if p[3] == id then
+                return i
+            end
+        end
+        return nil
+    end
 
     pipeline
         :pipe(function(_,input)
@@ -125,9 +136,9 @@ return function(gameHandler,screen,image)
         end,'zoom')
         :pipe(function(self,input,alias)
             local state = gameHandler.state
-            local warnings = state.bombsWarnings
+            local shots = state.shots
             local dx,dy = 1/(sx-1),1/(sy-1)
-            for _,w in pairs(warnings) do
+            for _,w in pairs(shots) do
                 local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
                 local dt = (w.bombingTime-os.clock())/(w.bombingTime-w.startTime)
                 local r = w.r*state.level
@@ -152,10 +163,36 @@ return function(gameHandler,screen,image)
                     }
                 end
             end
+            local warnings = state.bombsWarnings
+            for _,w in pairs(warnings) do
+                local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
+                local r = w.r*state.level
+                local X,Y,RX,RY = math.floor(x*sx+0.4999),math.floor(0.4999+y*sy),math.floor(r*sx+0.4999),math.floor(r*sy+0.4999)
+                if x+r > 0 and x-r < 1 and y+r > 0 and y-r < 1 then
+                    input.image:draw{
+                        from={X-RX,Y-RY,'px'},
+                        to={X+RX,Y+RY,'px'},
+                        color=function(s,U,V,u,v)
+                            if math.abs(U) < 1.8*dx  or math.abs(V) < 1.8*dy or math.abs(V-1-dy) < 1.8*dy or math.abs(U-1-dx) < 1.8*dx  then
+                                screen.mask:setPx(u,v,square)
+                                screen.mask:setPx(u+dx,v,square)
+                                screen.mask:setPx(u-dx,v,square)
+                                screen.mask:setPx(u,v+dy,square)
+                                screen.mask:setPx(u,v-dy,square)
+                                local n = ((math.floor(0.4999+u*sx)+math.floor(0.4999+v*sy))%3)
+                                if n == 0 then
+                                    return Color(1)
+                                end
+                            end
+                            return (s:getPx(u,v) or Color()):mix(Color(1),0.05)
+                        end
+                    }
+                end
+            end
             local lines = state.lines
             for i,l in pairs(state.lines) do
-                local p1 = state.cities[l[1]]
-                local p2 = state.cities[l[2]]
+                local p1 = state.cities[findPointById(state,l[1])]
+                local p2 = state.cities[findPointById(state,l[2])]
                 self:runPipe({
                     drawLine,
                     'line_'..i,
@@ -186,7 +223,7 @@ return function(gameHandler,screen,image)
                         screen.mask:setPx(U,V,square)
                         screen.mask:setPx(U,V+dy,square)
                         screen.mask:setPx(U,V-dy,square)
-                        return (i == state.selected and Color(1,0.6,0.6) or Color(0.6,0.6,0.6)) * (1-math.sqrt(u*u+v*v))
+                        return (p[3] == state.selected and Color(1,0.6,0.6) or Color(0.6,0.6,0.6)) * (1-math.sqrt(u*u+v*v))
                     end
                 }
             end
@@ -392,35 +429,38 @@ return function(gameHandler,screen,image)
     gameHandler:on('click',function(state,x,y)
         local u,v = zoom(x/(screen.sx-1),y/(screen.sy-1),state.level,state.x,state.y)
         local i = findPoint(state,u,v)
-        if not i and state.selected then
+        local si = findPointById(state,state.selected)
+        if not i and si then
             if state.biomeMap:getPx(u,v) then
-                local ps = state.cities[state.selected]
+                local ps = state.cities[si]
                 local dx,dy = ps[1]-u,ps[2]-v
                 local cost = (dx*dx+dy*dy)/10+cityPrice
                 if state.ressources - cost >= 0 then
-                    state.cities[#state.cities+1] = {u,v}
-                    state.lines[#state.lines+1] = {state.selected,#state.cities}
-                    state.selected = #state.cities
+                    state.cities[#state.cities+1] = {u,v,state.cityId}
+                    state.lines[#state.lines+1] = {state.selected,state.cityId}
                     state.ressources = state.ressources - cost
+                    state.selected = state.cityId
+                    state.cityId = state.cityId+1
                 end
             end
         else
-            if state.selected == i then
+            local p = state.cities[i]
+            if state.selected == p[3] then
                 state.selected = nil
             else
-                if state.selected then
-                    local l = findLine(state,state.selected,i)
+                if si then
+                    local l = findLine(state,state.selected,p[3])
                     if not l then
-                        local ps = state.cities[state.selected]
+                        local ps = state.cities[si]
                         local dx,dy = ps[1]-u,ps[2]-v
                         local cost = (dx*dx+dy*dy)/10+cityPrice
                         if state.ressources - cost >= 0 then
-                            state.lines[#state.lines+1] = {state.selected,i}
+                            state.lines[#state.lines+1] = {state.selected,state.cities[i][3]}
                             state.ressources = state.ressources - cost
                         end
                     end
                 end
-                state.selected = i
+                state.selected = p[3]
             end
         end
     end)
