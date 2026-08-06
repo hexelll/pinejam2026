@@ -47,14 +47,40 @@ print("Display ready")
 --[[
     GAME LOGIC 
 ]]
-
+local function findPointById(state,id)
+        for i,p in pairs(state.cities) do
+            if p[3] == id then
+                return i
+            end
+        end
+        return nil
+    end
+local function removePoint(state,id)
+    table.remove(state.cities,findPointById(state,id))
+    local newLines = {}
+    for i,l in pairs(state.lines) do
+        if not(l[1] == id or l[2] == id) then
+            newLines[#newLines+1] = l
+        end
+    end
+    state.lines = newLines
+end
+local function invertZoom(u,v,level,x,y)
+    return (u-x-0.5)*level+0.5,(v-y-0.5)*level+0.5
+end
 -- explode one shot
-local function kaboom(shot)
+local function kaboom(state,shot)
     -- destroy cities/lines
 
-    -- play cool animation ?
-
-    print("KABOOM")
+    for _,p in pairs(state.cities) do
+        local x,y = invertZoom(shot.x,shot.y,state.level,state.x,state.y)
+        local du,dv = p[1]-x,p[2]-y
+        local d = du*du+dv*dv
+        if d < shot.r*shot.r then
+            print("KABOOM")
+            removePoint(state,p[3])
+        end
+    end
 end
 -- shots explosions logic
 gameHandler:addTask(function (state)
@@ -78,16 +104,18 @@ end
 -- create shots in bombs warning
 local function launchAttack(state,w)
     
-    local nbShots = math.floor(state.dangerLevel+0.5)
+    local nbShots = 1--math.floor(state.dangerLevel+0.5)
     for i=1,nbShots do 
 
-        local x,y = randomFloat(w.x-w.r/2,w.x+w.r/2),randomFloat(w.y-w.r/2,w.y+w.r/2)
+        local x,y = randomFloat(w.x-w.r+0.01,w.x+w.r-0.01),randomFloat(w.y-w.r+0.01,w.y+w.r-0.01)
+
+        local d = math.min( w.r-math.abs(x-w.x), w.r-math.abs(y-w.y) )
 
         state.shots[state.shotsId] = {
             x= x,
             y= y,
-            r= math.max( w.r, 0.05+math.random()*state.dangerLevel/15 ),
-            bombingTime = os.clock()+3,
+            r= math.max( 0.01 , math.min( 0.3 , randomFloat(0.01,d) )),
+            bombingTime = os.clock()+1,
             startTime = os.clock()
         }
         state.shotsId = state.shotsId + 1
@@ -107,13 +135,13 @@ gameHandler:addTask(function (state)
     end
     
     -- add warnings 
-    local delayBombs = math.max( 0, (1/state.dangerLevel)*5)
+    local delayBombs = math.max( 3, (1/state.dangerLevel)*5)
     if ( os.clock() - state.bombWarningTime > delayBombs )then
    
         state.bombsWarnings[state.warningId] = {
             x=math.random(),
             y=math.random(),
-            r=  0.05+math.random()*state.dangerLevel/10 ,
+            r= math.max( 0.05 , math.min( 0.7 , 0.05+math.random()*state.dangerLevel/10 )) ,
             bombingTime = os.clock()+10,
             startTime = os.clock()
         }

@@ -73,7 +73,7 @@ return {
         end
     })
 
-    local worley1 = NoiseMaker:newWorleyNoise(10,10)
+    local worley1 = NoiseMaker:newWorleyNoise(4,4)
     local worley2 = NoiseMaker:newWorleyNoise(40,40)
 
 
@@ -159,13 +159,15 @@ return {
                 local h = 0.7*(height/landT) + 0.3*noisyP3:getValUV(u,v)
                 local col = mapToGradient(1-h,"#232616","#acb192")
                 
-                col = mapToGradient( 1-math.max(0,val2-0.4) , col, "#FFFFFF" )
+                --col = mapToGradient( 1-math.max(0,val2-0.4) , col, "#FFFFFF" )
                 col = mapToGradient( 1-math.max(0,detail1-0.2) , col, "#4b3d27" )
 
                 --col = col * ( (noisyP3:getValUV(u,v)*0.8 + math.random()*0.2  )*0.1 +0.95 )
                 return col
             else
-                return Color(height*0.5,height*0.5,height*0.5)
+                local h = (height)*0.5
+                local col = Color(h,h,h)
+                return col
             end
             
             return Color(height*0.5,height*0.5,height*0.5)
