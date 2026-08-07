@@ -14,7 +14,7 @@ print('finished game files load')
 print('start ComBox files load')
 import
     :setDownloadDir("/vendor/combox")
-    :setDir("https://raw.githubusercontent.com/hexelll/ComBox/refs/heads/dev/")
+    :setDir("https://raw.githubusercontent.com/hexelll/ComBox/refs/heads/pinejame2026/")
 
 local Renderer = import 'Renderer.lua'
 local ImageHandler = import 'ImageHandler.lua'
@@ -144,7 +144,7 @@ gameHandler:addTask(function (state)
         state.bombsWarnings[state.warningId] = {
             x=math.random(),
             y=math.random(),
-            r= math.max( 0.05 , math.min( 0.5 , 0.05+math.random()*state.dangerLevel/10 )) ,
+            r= math.max( 0.05 , math.min( 0.25 , 0.05+math.random()*state.dangerLevel/10 )) ,
             bombingTime = os.clock()+10,
             startTime = os.clock()
         }
@@ -195,7 +195,7 @@ gameHandler:run{
     ressources = 4,
     maxRessources = 0,
     dayNb = 1,
-    dayChangeTime = os.clock(),
+    dayChangeTime = os.clock()-5,
 
     bombWarningTime = os.clock(),
     bombsWarnings = {},
