@@ -30,7 +30,7 @@ return function(gameHandler,screen,image)
         :process{function(_,u,v)
             u,v = math.abs(u-0.5),math.abs(v-0.5)
             local k = (u*u*u+v*v*v)^(1/3)
-            return k < 0.4 and Color(0.7,0.7,0.7) or Color(1,1,1,0)
+            return k < 0.4 and Color(0.7,0.7,0.7)*(1-k/0.4+0.5) or Color(1,1,1,0)
         end}
         :drawTri{
             points={
@@ -47,7 +47,7 @@ return function(gameHandler,screen,image)
         :process{function(_,u,v)
             u,v = math.abs(u-0.5),math.abs(v-0.5)
             local k = (u*u*u+v*v*v)^(1/3)
-            return k < 0.4 and Color(0.7,0.7,0.7) or Color(1,1,1,0)
+            return k < 0.4 and Color(0.7,0.7,0.7)*(1-k/0.4+0.5) or Color(1,1,1,0)
         end}
         :image({
             from={0.5-0.1,0.3},
@@ -66,7 +66,7 @@ return function(gameHandler,screen,image)
         :process{function(_,u,v)
             u,v = math.abs(u-0.5),math.abs(v-0.5)
             local k = (u*u*u+v*v*v)^(1/3)
-            return k < 0.4 and Color(0.7,0.7,0.7) or Color(1,1,1,0)
+            return k < 0.4 and Color(0.7,0.7,0.7)*(1-k/0.4+0.5) or Color(1,1,1,0)
         end}
         :image({
             from={0.3,0.5-0.1},
@@ -80,10 +80,10 @@ return function(gameHandler,screen,image)
 
     local p = {x=sx-arrowScale*2,y=sy-arrowScale*3}
     local pRight = {x=p.x+arrowScale,y=p.y}
-    local pLeft = {x=p.x-arrowScale,y=p.y}
-    local pTop = {x=p.x,y=p.y-arrowScale}
-    local pBottom = {x=p.x,y=p.y+arrowScale}
-    local pBar = {x=pLeft.x+2-arrowScale,y=p.y+arrowScale*2}
+    local pLeft = {x=p.x-arrowScale+1,y=p.y}
+    local pTop = {x=p.x+1,y=p.y-arrowScale+2}
+    local pBottom = {x=p.x+1,y=p.y+arrowScale}
+    local pBar = {x=pLeft.x+5-arrowScale,y=p.y+arrowScale*2}
     
     
     --local palette = image:duplicate():resize(sx,sy):findPalette('kmeans',nil,16)
@@ -98,7 +98,7 @@ return function(gameHandler,screen,image)
     sleep()
     local temp = ImageHandler:new(arrowScale+1,arrowScale+1)
 
-    local barLength = arrowScale*4-4
+    local barLength = arrowScale*4-7
     local barHeight = 4
 
     local barTemp = ImageHandler:new(barLength,barHeight)
@@ -113,6 +113,7 @@ return function(gameHandler,screen,image)
     gameHandler.state.cityId = 0
     gameHandler.state.lines = {}
 
+    local state = gameHandler.state
 
     local iconSize = 3
 
@@ -134,72 +135,77 @@ return function(gameHandler,screen,image)
             end)
             return input
         end,'zoom')
+        :pipe(function(_,input,alias)
+            if not state.isAlive then
+                input.image:process(function(self,u,v)
+                    return (self:getPx(u,v) or Color())*0.5
+                end)
+            end
+        end)
         :pipe(function(self,input,alias)
-            local state = gameHandler.state
             local shots = state.shots
             local dx,dy = 1/(sx-1),1/(sy-1)
-            for _,w in pairs(shots) do
-                local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
-                local dt = (w.bombingTime-os.clock())/(w.bombingTime-w.startTime)
-                local r = w.r*state.level
-                local sr = r*(1-dt)
-                if x+r > 0 and x-r < 1 and y+r > 0 and y-r < 1 then
-                    input.image:draw{
-                        from={x-r,y-r},
-                        to={x+r,y+r},
-                        color=function(s,_,_,u,v)
-                            local du,dv = u-x,v-y
-                            local d = du*du+dv*dv
-                            if d<=r*r and math.abs(math.sqrt(d)-r) < 1.5*dy then
-                                screen.mask:setPx(u,v,square)
-                                screen.mask:setPx(u,v+dy,square)
-                                screen.mask:setPx(u,v-dy,square)
-                                return Color(1)
-                            end
-                            return (s:getPx(u,v) or Color()):mix(Color(1),d<sr*sr and 0.4 or d<r*r and 0.2 or 0)
-                        end
-                    }
-                end
-            end
             local warnings = state.bombsWarnings
-            for _,w in pairs(warnings) do
-                local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
-                local r = w.r*state.level
-                local X,Y,RX,RY = math.floor(x*sx+0.4999),math.floor(0.4999+y*sy),math.floor(r*sx+0.4999),math.floor(r*sy+0.4999)
-                if x+r > 0 and x-r < 1 and y+r > 0 and y-r < 1 then
-                    input.image:draw{
-                        from={X-RX,Y-RY,'px'},
-                        to={X+RX,Y+RY,'px'},
-                        color=function(s,U,V,u,v)
-                            if math.abs(U) < 1.8*dx  or math.abs(V) < 1.8*dy or math.abs(V-1-dy) < 1.8*dy or math.abs(U-1-dx) < 1.8*dx  then
-                                screen.mask:setPx(u,v,square)
-                                screen.mask:setPx(u,v+dy,square)
-                                screen.mask:setPx(u,v-dy,square)
-                                local n = ((math.floor(0.4999+u*sx)+math.floor(0.4999+v*sy))%3)
-                                if n == 0 then
-                                    return Color(1)
-                                end
+            input.image:process(function(s,u,v)
+                local px = s:getPx(u,v) or Color()
+                for _,w in pairs(warnings) do
+                    local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
+                    local r = w.r*state.level
+                    local X,Y,RX,RY = math.floor(x*sx+0.4999),math.floor(0.4999+y*sy),math.floor(r*sx+0.4999),math.floor(r*sy+0.4999)
+                    if u > x-r and u < x+r and v > y-r and v < y+r then
+                        if 
+                        math.abs(u-x-r) < dx or math.abs(v-y-r) < dy 
+                        or math.abs(u-x+r) < dx or math.abs(v-y+r) < dy 
+                        then
+                            screen.mask:setPx(u,v,square)
+                            screen.mask:setPx(u,v+dy,square)
+                            screen.mask:setPx(u,v-dy,square)
+                            local n = ((math.floor(0.4999+u*sx)+math.floor(0.4999+v*sy))%2)
+                            if n == 0 then
+                                px = Color(1)
                             end
-                            return (s:getPx(u,v) or Color()):mix(Color(1),0.05)
                         end
-                    }
+                        
+                    end
                 end
-            end
+                for _,w in pairs(shots) do
+                    local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
+                    local dt = (w.bombingTime-os.clock())/(w.bombingTime-w.startTime)
+                    local r = w.r*state.level
+                    local sr = r*(1-dt)
+                    local du,dv = u-x,v-y
+                    local d = du*du+dv*dv
+                    if d<=r*r and math.abs(math.sqrt(d)-r) < 1.5*dy then
+                        screen.mask:setPx(u,v,square)
+                        screen.mask:setPx(u,v+dy,square)
+                        screen.mask:setPx(u,v-dy,square)
+                        return Color(1)
+                    end
+                    px = px:mix(Color(1),d<sr*sr and 0.4 or d<r*r and 0.2 or 0)
+                end
+                return px
+            end)
             local lines = state.lines
             for i,l in pairs(state.lines) do
                 local p1 = state.cities[findPointById(state,l[1])]
                 local p2 = state.cities[findPointById(state,l[2])]
+                local u1,v1 = invertZoom(p1[1],p1[2],state.level,state.x,state.y)
+                local u2,v2 = invertZoom(p2[1],p2[2],state.level,state.x,state.y)
+                local du,dv = u1-u2,v1-v2
+                local D = math.sqrt(du*du+dv*dv)
+                local k = os.clock()+i*3
                 self:runPipe({
                     drawLine,
                     'line_'..i,
                     {
-                        from={invertZoom(p1[1],p1[2],state.level,state.x,state.y)},
-                        to={invertZoom(p2[1],p2[2],state.level,state.x,state.y)},
-                        color=function(_,_,U,V)
+                        from={u1,v1},
+                        to={u2,v2},
+                        color=function(u,v,U,V)
+                            local d = 1-(u*u+v*v)/2
                             screen.mask:setPx(U,V,square)
                             screen.mask:setPx(U,V+dy,square)
                             screen.mask:setPx(U,V-dy,square)
-                            return Color()
+                            return Color(1,1,1)*(1+math.sin(d*4/D*(1/state.level)+k))/2 
                         end
                     }
                 },input)
@@ -219,7 +225,7 @@ return function(gameHandler,screen,image)
                         screen.mask:setPx(U,V,square)
                         screen.mask:setPx(U,V+dy,square)
                         screen.mask:setPx(U,V-dy,square)
-                        return (p[3] == state.selected and Color(1,1,1) or Color(0.8,0.8)) * (1-math.sqrt(u*u+v*v))
+                        return (p[3] == state.selected and Color(1,1,1) or Color(0.8,0.8)) * (0.2+1-math.sqrt(u*u+v*v))
                     end
                 }
             end
@@ -256,9 +262,9 @@ return function(gameHandler,screen,image)
                         screen.mask:setPx(U-dx,V,square)
                         local k = state.ressources/state.maxRessources
                         if u <= k then
-                            return Color(1)
+                            return Color(1)*(1-math.abs(v-0.5))
                         else
-                            return Color(1,1,1)
+                            return Color(1,1,1)*(1-math.abs(v-0.5))
                         end
                     end
                 },
@@ -324,8 +330,8 @@ return function(gameHandler,screen,image)
                 },
                 plus={
                     image=temp,
-                    from={pLeft.x+1-arrowScale,pTop.y+2,'px'},
-                    to={pLeft.x+1,pTop.y+arrowScale+2,'px'},
+                    from={pLeft.x+3-arrowScale,pTop.y+1,'px'},
+                    to={pLeft.x+3,pTop.y+arrowScale+1,'px'},
                     color=function(self,u,v,U,V)
                         local px = plus:getPx(u,v) or Color()
                         if px[4] > 0.1 then
@@ -339,8 +345,8 @@ return function(gameHandler,screen,image)
                 },
                 minus={
                     image=temp,
-                    from={pLeft.x+1-arrowScale,pTop.y+2*arrowScale-2,'px'},
-                    to={pLeft.x+1,pTop.y+3*arrowScale-2,'px'},
+                    from={pLeft.x+3-arrowScale,pTop.y+2*arrowScale-4,'px'},
+                    to={pLeft.x+3,pTop.y+3*arrowScale-4,'px'},
                     color=function(self,u,v,U,V)
                         local px = minus:getPx(u,v) or Color()
                         if px[4] > 0.1 then

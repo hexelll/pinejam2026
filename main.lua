@@ -73,11 +73,11 @@ local function kaboom(state,shot)
     -- destroy cities/lines
 
     for _,p in pairs(state.cities) do
-        local x,y = invertZoom(shot.x,shot.y,state.level,state.x,state.y)
+        local x,y = shot.x,shot.y
         local du,dv = p[1]-x,p[2]-y
         local d = du*du+dv*dv
-        if d < shot.r*shot.r then
-            print("KABOOM")
+        if d <= shot.r*shot.r then
+            state.ressources = math.max(0,state.ressources*0.9)
             removePoint(state,p[3])
         end
     end
@@ -104,22 +104,18 @@ end
 -- create shots in bombs warning
 local function launchAttack(state,w)
     
-    local nbShots = 1--math.floor(state.dangerLevel+0.5)
+    local nbShots = state.dangerLevel*2--1--math.floor(state.dangerLevel+0.5)
     for i=1,nbShots do 
-
         local x,y = randomFloat(w.x-w.r+0.01,w.x+w.r-0.01),randomFloat(w.y-w.r+0.01,w.y+w.r-0.01)
-
         local d = math.min( w.r-math.abs(x-w.x), w.r-math.abs(y-w.y) )
-
         state.shots[state.shotsId] = {
             x= x,
             y= y,
-            r= math.max( 0.01 , math.min( 0.3 , randomFloat(0.01,d) )),
+            r= math.max( 0.01 , math.min( 0.4 , randomFloat(0.01,d) )),
             bombingTime = os.clock()+1,
             startTime = os.clock()
         }
         state.shotsId = state.shotsId + 1
-
     end
 
 end
@@ -147,8 +143,6 @@ gameHandler:addTask(function (state)
         }
         state.warningId = state.warningId + 1
 
-        print("BOMBS COMMING")
-
         state.bombWarningTime = os.clock()
     end
 
@@ -161,8 +155,8 @@ gameHandler:addTask(function (state)
     if ( os.clock() - state.dayChangeTime > 5 )then -- time between days
 
         if (state.isAlive) then
-            state.ressources = state.ressources + state.dayNb
-            
+            state.maxRessources = #state.cities*2
+            state.ressources = math.min(state.maxRessources,state.ressources + #state.lines/2 + 1)
             print("You have ".. state.ressources .." ressources")
         end
 
@@ -192,8 +186,7 @@ gameHandler:run{
     dangerLevel = 1,
 
     ressources = 4,
-    maxRessources=100,
-
+    maxRessources = 0,
     dayNb = 1,
     dayChangeTime = os.clock(),
 
