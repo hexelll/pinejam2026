@@ -91,14 +91,17 @@ local function kaboom(state,shot)
 end
 -- shots explosions logic
 gameHandler:addTask(function (state)
-
+    local shots = {}
     -- explode when shot expires
     for k,shot in pairs(state.shots) do
         if ( shot.bombingTime <= os.clock() ) then
             kaboom(state,shot)
-            state.shots[k] = nil
+        else
+            shots[k] = shot
         end
     end
+
+    state.shots = shots
 
 end)
 

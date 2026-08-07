@@ -165,7 +165,7 @@ return function(gameHandler,screen,image)
                                 px = Color(1)
                             end
                         end
-                        
+                        px = px:mix(Color(1),0.05)
                     end
                 end
                 for _,w in pairs(shots) do
@@ -181,7 +181,7 @@ return function(gameHandler,screen,image)
                         screen.mask:setPx(u,v-dy,square)
                         return Color(1)
                     end
-                    px = px:mix(Color(1),d<sr*sr and 0.4 or d<r*r and 0.2 or 0)
+                    px = px:mix(Color(1),d<sr*sr and 0.3 or d<r*r and 0.1 or 0)
                 end
                 return px
             end)
