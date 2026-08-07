@@ -1,6 +1,3 @@
-
-local import = require "import"
-
 local NoiseMaker = import "NoiseMaker.lua"
 
 import
