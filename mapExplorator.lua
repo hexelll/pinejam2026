@@ -146,7 +146,11 @@ return function(gameHandler,screen,image)
             local shots = state.shots
             local dx,dy = 1/(sx-1),1/(sy-1)
             local warnings = state.bombsWarnings
+            local T = os.clock()
             input.image:process(function(s,u,v)
+                if os.clock() > T+5 then
+                    sleep()
+                end
                 local px = s:getPx(u,v) or Color()
                 for _,w in pairs(warnings) do
                     local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
