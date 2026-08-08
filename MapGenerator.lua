@@ -187,5 +187,4 @@ return {
                     }
 
     return {prettyMap=result.image,biomeMap=biomeMap}
-end)
-
+end}
