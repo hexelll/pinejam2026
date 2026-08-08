@@ -90,6 +90,7 @@ return {
 
                 if (os.clock() - T > 5)then
                     sleep()
+                    T = os.clock()
                 end
 
                 -- make noise map
