@@ -169,19 +169,21 @@ return function(gameHandler,screen,image)
                     end
                 end
                 for _,w in pairs(shots) do
-                    local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
-                    local dt = (w.bombingTime-os.clock())/(w.bombingTime-w.startTime)
-                    local r = w.r*state.level
-                    local sr = r*(1-dt)
-                    local du,dv = u-x,v-y
-                    local d = du*du+dv*dv
-                    if d<=r*r and math.abs(math.sqrt(d)-r) < 1.5*dy then
-                        screen.mask:setPx(u,v,square)
-                        screen.mask:setPx(u,v+dy,square)
-                        screen.mask:setPx(u,v-dy,square)
-                        return Color(1)
+                    if os.clock() > w.startTime then
+                        local x,y = invertZoom(w.x,w.y,state.level,state.x,state.y)
+                        local dt = (w.bombingTime-os.clock())/(w.bombingTime-w.startTime)
+                        local r = w.r*state.level
+                        local sr = r*(1-dt)
+                        local du,dv = u-x,v-y
+                        local d = du*du+dv*dv
+                        if d<=r*r and math.abs(math.sqrt(d)-r) < 1.5*dy then
+                            screen.mask:setPx(u,v,square)
+                            screen.mask:setPx(u,v+dy,square)
+                            screen.mask:setPx(u,v-dy,square)
+                            return Color(1)
+                        end
+                        px = px:mix(Color(1),d<sr*sr and 0.3 or d<r*r and 0.1 or 0)
                     end
-                    px = px:mix(Color(1),d<sr*sr and 0.3 or d<r*r and 0.1 or 0)
                 end
                 return px
             end)
