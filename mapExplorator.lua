@@ -107,9 +107,17 @@ return function(gameHandler,screen,image)
     gameHandler.state.x = 0
     gameHandler.state.y = 0
     gameHandler.state.level = 1
-    gameHandler.state.cities = {
-        {0.4,0.4,-1}
-    }
+    gameHandler.state.cities = {}
+    for i = 1,3 do
+        local ok = false
+        while not ok do
+            local u,v = math.random(),math.random()
+            if gameHandler.state.biomeMap:getPx(u,v) then
+                ok = true
+                gameHandler.state.cities[i] = {u,v,-i}
+            end
+        end
+    end
     gameHandler.state.cityId = 0
     gameHandler.state.lines = {}
 
