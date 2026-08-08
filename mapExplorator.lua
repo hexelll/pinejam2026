@@ -158,6 +158,7 @@ return function(gameHandler,screen,image)
             input.image:process(function(s,u,v)
                 if os.clock() > T+5 then
                     sleep()
+                    T = os.clock()
                 end
                 local px = s:getPx(u,v) or Color()
                 for _,w in pairs(warnings) do
